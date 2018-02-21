@@ -347,35 +347,12 @@ export default function LatexMode() {
     }
   }
 
-  function _buildCommandPatterns(commands) {
-    for (var command in commands) {
-      commands[command].lookaheadPattern =
-        new RegExp('^\\\\' + command + '\\s*[\\[{]');
-      commands[command].matchPattern =
-        new RegExp('^\\\\' + command + '\\s*');
+  function _buildCommandPattern(command) {
+    return {
+      lookaheadPattern: new RegExp('^\\\\' + command + '\\s*[\\[{]'),
+      matchPattern: new RegExp('^\\\\' + command + '\\s*')
     }
-    return commands;
   }
-
-  var _commandForPatterns = {
-    'author': {},
-    'chapter\\*': {},
-    'chapter': {},
-    'section': {},
-    'section\\*': {},
-    'subsection': {},
-    'subsection\\*': {},
-    'subsubsection': {},
-    'subsubsection\\*': {},
-    'textbf': {},
-    'textit': {},
-    'caption': {},
-    'label': {},
-    'includegraphics': {},
-    'ref': {},
-    'input': {},
-    'include': {}
-  };
 
   var _bibCommands = [
     'cite',
@@ -391,15 +368,45 @@ export default function LatexMode() {
     'citealt',
     'textcite',
     'cref',
-    'Cref',
-  ]
+    'Cref'
+  ].reduce((acc, command) => {
+    acc[command] = {
+      lookaheadPattern: new RegExp('^\\\\' + command + '\\s*[\\[{]'),
+      matchPattern: new RegExp('^\\\\' + command + '\\s*')
+    }
+    return acc
+  }, {})
 
-  _.each(_bibCommands, function (command) {
-    _commandForPatterns[command] = {}
-  });
+  var _commands = [
+    'author',
+    'chapter\\*',
+    'chapter',
+    'section',
+    'section\\*',
+    'subsection',
+    'subsection\\*',
+    'subsubsection',
+    'subsubsection\\*',
+    'textbf',
+    'textit',
+    'caption',
+    'label',
+    'includegraphics',
+    'ref',
+    'input',
+    'include'
+  ].reduce((acc, command) => {
+    acc[command] = {
+      lookaheadPattern: new RegExp('^\\\\' + command + '\\s*[\\[{]'),
+      matchPattern: new RegExp('^\\\\' + command + '\\s*')
+    }
+    return acc
+  }, {})
 
-  var _MATCH_COMMAND_WITH_ARGUMENT_LOOKAHEADS = _buildCommandPatterns(
-    _commandForPatterns
+  var _MATCH_COMMAND_WITH_ARGUMENT_LOOKAHEADS = Object.assign(
+    {},
+    _commands,
+    _bibCommands
   );
 
   function _matchCommandWithArgument(stream, state, command) {
@@ -418,7 +425,7 @@ export default function LatexMode() {
   function _matchBibCommand(stream, state) {
     var currentVal;
     var returnVal = null;
-    _.each(_bibCommands, function (command) {
+    _.keys(_bibCommands).forEach(function (command) {
       currentVal = _matchCommandWithArgument(stream, state, command);
       if (currentVal) {
         returnVal = currentVal;
@@ -557,50 +564,40 @@ export default function LatexMode() {
   }
 
   var _IGNORED_ENVIRONMENTS = _buildEnvironmentBeginAndEndPatterns({
-    'verbatim': { tokenizer: _matchVerbatimEnvironment },
-    'Verbatim': { tokenizer: _matchVerbatimEnvironment },
-    'lstlisting': { tokenizer: _matchVerbatimEnvironment },
-    'minted': { tokenizer: _matchVerbatimEnvironment },
-    'comment': { tokenizer: _matchCommentEnvironment }
+    'verbatim':   { tokenizer: _matchVerbatimEnvironment, allowBlankLines: true },
+    'Verbatim':   { tokenizer: _matchVerbatimEnvironment, allowBlankLines: true },
+    'lstlisting': { tokenizer: _matchVerbatimEnvironment, allowBlankLines: true },
+    'minted':     { tokenizer: _matchVerbatimEnvironment, allowBlankLines: true },
+    'comment':    { tokenizer: _matchCommentEnvironment, allowBlankLines: true }
   });
-  var env;
-  for (env in _IGNORED_ENVIRONMENTS) {
-    if (_IGNORED_ENVIRONMENTS.hasOwnProperty(env)) {
-      _IGNORED_ENVIRONMENTS[env].allowBlankLines = true;
-    }
-  }
 
-  var _MATH_ENVIRONMENTS = {
-    'math': { kind: 'inline-math' },
-    'displaymath': { kind: 'display-math' }
-  };
-  [ // Standard LaTeX
-    'equation',
-    'eqnarray',
+  var _MATH_ENVIRONMENTS = _buildEnvironmentBeginAndEndPatterns({
+    'math':        { tokenizer: _matchMath, kind: 'inline-math', allowBlankLines: false },
+    'displaymath': { tokenizer: _matchMath, kind: 'display-math', allowBlankLines: false },
+    // Standard LaTeX
+    'equation':    { tokenizer: _matchMath, kind: 'outer-display-math', allowBlankLines: false },
+    'equation\\*': { tokenizer: _matchMath, kind: 'outer-display-math', allowBlankLines: false },
+    'eqnarray':    { tokenizer: _matchMath, kind: 'outer-display-math', allowBlankLines: false },
+    'eqnarray\\*': { tokenizer: _matchMath, kind: 'outer-display-math', allowBlankLines: false },
     // AMS-LaTeX
-    'align',
-    'gather',
-    'multline',
-    'alignat',
-    'xalignat'
-  ].forEach(function (env) {
-    _MATH_ENVIRONMENTS[env] = { kind: 'outer-display-math' };
-    _MATH_ENVIRONMENTS[env + '\\*'] = { kind: 'outer-display-math' };
-  });
-  _buildEnvironmentBeginAndEndPatterns(_MATH_ENVIRONMENTS);
-  for (env in _MATH_ENVIRONMENTS) {
-    if (_MATH_ENVIRONMENTS.hasOwnProperty(env)) {
-      _MATH_ENVIRONMENTS[env].tokenizer = _matchMath;
-      _MATH_ENVIRONMENTS[env].allowBlankLines = false;
-    }
-  }
+    'align':       { tokenizer: _matchMath, kind: 'outer-display-math', allowBlankLines: false },
+    'align\\*':    { tokenizer: _matchMath, kind: 'outer-display-math', allowBlankLines: false },
+    'gather':      { tokenizer: _matchMath, kind: 'outer-display-math', allowBlankLines: false },
+    'gather\\*':   { tokenizer: _matchMath, kind: 'outer-display-math', allowBlankLines: false },
+    'multline':    { tokenizer: _matchMath, kind: 'outer-display-math', allowBlankLines: false },
+    'multline\\*': { tokenizer: _matchMath, kind: 'outer-display-math', allowBlankLines: false },
+    'alignat':     { tokenizer: _matchMath, kind: 'outer-display-math', allowBlankLines: false },
+    'alignat\\*':  { tokenizer: _matchMath, kind: 'outer-display-math', allowBlankLines: false },
+    'xalignat':    { tokenizer: _matchMath, kind: 'outer-display-math', allowBlankLines: false },
+    'xalignat\\*': { tokenizer: _matchMath, kind: 'outer-display-math', allowBlankLines: false }
+  })
 
   var _TOP_LEVEL_ENVIRONMENTS = _buildEnvironmentBeginAndEndPatterns({
     'abstract': { tokenizer: _matchText, kind: 'abstract', allowBlankLines: true }
   });
 
   var _LIST_ENVIROMENTS = _buildEnvironmentBeginAndEndPatterns({
-    'itemize': { tokenizer: _matchListContent, kind: 'itemize', allowBlankLines: true, matchOnSingleLine: true },
+    'itemize':   { tokenizer: _matchListContent, kind: 'itemize', allowBlankLines: true, matchOnSingleLine: true },
     'enumerate': { tokenizer: _matchListContent, kind: 'enumerate', allowBlankLines: true, matchOnSingleLine: true }
   });
 
