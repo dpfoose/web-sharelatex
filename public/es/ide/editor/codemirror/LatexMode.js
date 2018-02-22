@@ -1,6 +1,6 @@
 import CodeMirror from 'codemirror'
 
-import Mark from './mark'
+import Mark from './Mark'
 
 //
 // if we consume a token, we have to return immediately, so we have to shift
