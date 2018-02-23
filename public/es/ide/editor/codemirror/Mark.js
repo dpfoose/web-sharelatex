@@ -32,14 +32,14 @@
  *
  */
 export default class Mark {
-  constructor(kind, from, contentFrom, contentTo, to, openParent) {
-    this.kind = kind;
-    this.from = from;
-    this.to = to;
-    this.contentFrom = contentFrom;
-    this.contentTo = contentTo;
-    this.openParent = openParent;
-    this.checkedProperties = {};
+  constructor (kind, from, contentFrom, contentTo, to, openParent) {
+    this.kind = kind
+    this.from = from
+    this.to = to
+    this.contentFrom = contentFrom
+    this.contentTo = contentTo
+    this.openParent = openParent
+    this.checkedProperties = {}
   }
 
   /**
@@ -50,14 +50,14 @@ export default class Mark {
    *
    * @return {Mark}
    */
-  copy() {
+  copy () {
     return new Mark(
-      this.kind = kind,
-      this.from = from,
-      this.to = to,
-      this.contentFrom = contentFrom,
-      this.contentTo = contentTo,
-      this.openParent = openParent
+      this.kind,
+      this.from,
+      this.to,
+      this.contentFrom,
+      this.contentTo,
+      this.openParent
     )
   }
 }
