@@ -6,6 +6,7 @@ describe('stuff', () => {
   it('does stuff', () => {
     expect(1).to.equal(1)
     expect(CodeMirror).to.equal(CodeMirror)
+    expect(true).to.be.true
   })
 
   it('inits', () => {
