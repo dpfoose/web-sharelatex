@@ -1,3 +1,4 @@
+routePrefix = '/' + process.env.SHARELATEX_ROUTE_PREFIX
 Path = require "path"
 express = require('express')
 Settings = require('settings-sharelatex')
@@ -181,15 +182,15 @@ notDefined = (x) -> !x?
 enableApiRouter = Settings.web?.enableApiRouter
 if enableApiRouter or notDefined(enableApiRouter)
 	logger.info("providing api router");
-	app.use(privateApiRouter)
+	app.use(routePrefix, privateApiRouter)
 	app.use(ErrorController.handleApiError)
 
 enableWebRouter = Settings.web?.enableWebRouter
 if enableWebRouter or notDefined(enableWebRouter)
 	logger.info("providing web router");
-	app.use(publicApiRouter) # public API goes with web router for public access
+	app.use(routePrefix, publicApiRouter) # public API goes with web router for public access
 	app.use(ErrorController.handleApiError)
-	app.use(webRouter)
+	app.use(routePrefix, webRouter)
 	app.use(ErrorController.handleError)
 
 router = new Router(webRouter, privateApiRouter, publicApiRouter)
